@@ -42,14 +42,21 @@ jobs:
       - name: Restore NuGet packages
         run: nuget restore
 
-      - name: Install .NET Framework 4.5.2 reference assemblies
+      - name: Install .NET Framework reference assemblies
         shell: pwsh
-        run: nuget install Microsoft.NETFramework.ReferenceAssemblies.net452 -Version 1.0.3 -OutputDirectory .ci -NonInteractive
+        run: |
+          $destination = Join-Path $env:GITHUB_WORKSPACE '.ci\reference-assemblies\.NETFramework'
+          New-Item -ItemType Directory -Path $destination -Force | Out-Null
+          foreach ($framework in @('452', '472')) {
+            nuget install "Microsoft.NETFramework.ReferenceAssemblies.net$framework" -Version 1.0.3 -OutputDirectory .ci -NonInteractive
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            Copy-Item ".ci\Microsoft.NETFramework.ReferenceAssemblies.net$framework.1.0.3\build\.NETFramework\*" $destination -Recurse -Force
+          }
 
       - name: Build Solution
         shell: pwsh
         run: |
-          $referenceRoot = Join-Path $env:GITHUB_WORKSPACE '.ci\Microsoft.NETFramework.ReferenceAssemblies.net452.1.0.3\build\.NETFramework'
+          $referenceRoot = Join-Path $env:GITHUB_WORKSPACE '.ci\reference-assemblies'
           msbuild /m /p:Configuration=${{ matrix.BUILD_CONFIGURATION }} "/p:TargetFrameworkRootPath=$referenceRoot"
 
       - name: Regression tests
