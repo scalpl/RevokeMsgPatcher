@@ -17,6 +17,8 @@
 # 👀微信/QQ/TIM防撤回补丁
 适用于 Windows 下 PC 版微信/QQ/TIM的防撤回补丁。**支持微信/QQ/TIM**，其中微信能够选择安装多开功能。
 
+本分支已修复微信 **4.1.15.12 x64** 多开失效及旧规则误改语音输入锁的问题，详见[修复说明与回归测试](docs/weixin-4.1.15.12.md)。下方上游下载链接不包含本分支修复，使用时请构建本分支。
+
 <img width="180px" src="https://raw.githubusercontent.com/huiyadanli/RevokeMsgPatcher/master/Images/revoke.jpg"/>
 
 下载地址：

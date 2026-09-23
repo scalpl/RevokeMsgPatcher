@@ -11,6 +11,12 @@ namespace RevokeMsgPatcher.Model
         public string Category { get; set; }
 
         /// <summary>
+        /// 0 preserves legacy multi-location matching; a positive value requires
+        /// exactly this many matches before the rule is accepted.
+        /// </summary>
+        public int ExpectedMatches { get; set; }
+
+        /// <summary>
         /// 悬浮气泡提示
         /// </summary>
         public string Tips { get; set; }
@@ -30,6 +36,7 @@ namespace RevokeMsgPatcher.Model
             ReplacePattern o = new ReplacePattern();
             o.Search = Search;
             o.Replace = Replace;
+            o.ExpectedMatches = ExpectedMatches;
             return o;
         }
     }
