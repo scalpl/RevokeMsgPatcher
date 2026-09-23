@@ -42,14 +42,26 @@ jobs:
       - name: Restore NuGet packages
         run: nuget restore
 
+      - name: Install .NET Framework 4.5.2 reference assemblies
+        shell: pwsh
+        run: nuget install Microsoft.NETFramework.ReferenceAssemblies.net452 -Version 1.0.3 -OutputDirectory .ci -NonInteractive
+
       - name: Build Solution
-        run: msbuild /m /p:Configuration=${{ matrix.BUILD_CONFIGURATION }}
+        shell: pwsh
+        run: |
+          $referenceRoot = Join-Path $env:GITHUB_WORKSPACE '.ci\Microsoft.NETFramework.ReferenceAssemblies.net452.1.0.3\build\.NETFramework'
+          msbuild /m /p:Configuration=${{ matrix.BUILD_CONFIGURATION }} "/p:TargetFrameworkRootPath=$referenceRoot"
+
+      - name: Regression tests
+        if: matrix.BUILD_CONFIGURATION == 'Release'
+        shell: pwsh
+        run: .\Tests\Run.ps1
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: RevokeMsgPatcher-${{ matrix.BUILD_CONFIGURATION }}
           path: |
-            .\RevokeMsgPatcher\bin
-            !.\RevokeMsgPatcher\bin\**\RevokeMsgPatcher.exe.config
+            .\RevokeMsgPatcher\bin\${{ matrix.BUILD_CONFIGURATION }}\
             !.\RevokeMsgPatcher\bin\**\RevokeMsgPatcher.pdb
+          if-no-files-found: error
