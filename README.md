@@ -2,17 +2,7 @@
 <p align="center">
 	<a><img width="100px" src="https://raw.githubusercontent.com/huiyadanli/RevokeMsgPatcher/master/Images/logo.png"/></a>
 </p>
-<p align="center">
-	<a href="https://www.microsoft.com/download/details.aspx?id=30653">
-		<img src="https://img.shields.io/badge/platform-windows-lightgrey.svg?style=flat-square"/>
-	</a>
-	<a href="https://github.com/huiyadanli/RevokeMsgPatcher/releases">
-		<img src="https://img.shields.io/github/downloads/huiyadanli/RevokeMsgPatcher/total.svg?style=flat-square"/>
-	</a>
-	<a href="https://ci.appveyor.com/project/huiyadanli/RevokeMsgPatcher">
-		<img src="https://img.shields.io/appveyor/ci/huiyadanli/RevokeMsgPatcher.svg?style=flat-square"/>
-	</a>
-</p>
+
 
 # 👀微信/QQ/TIM防撤回补丁
 适用于 Windows 下 PC 版微信/QQ/TIM的防撤回补丁。**支持微信/QQ/TIM**，其中微信能够选择安装多开功能。
