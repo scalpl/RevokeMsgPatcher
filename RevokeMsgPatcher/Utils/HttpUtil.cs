@@ -30,13 +30,8 @@ namespace RevokeMsgPatcher.Utils
         {
             get
             {
-                string currentVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
-                if (currentVersion.Length > 3)
-                {
-                    return currentVersion.Substring(0, 3);
-                }
-
-                return "1.6";
+                // 补丁数据格式/目录独立于程序修订版本，2.1.1 继续使用 2.1 数据。
+                return "2.1";
             }
         }
 

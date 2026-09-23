@@ -66,14 +66,8 @@ namespace RevokeMsgPatcher
             InitializeComponent();
 
             // 标题加上版本号
-            string currentVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
-            if (currentVersion.Length > 3)
-            {
-                thisVersion = currentVersion.Substring(0, 3);
-                currentVersion = " v" + thisVersion;
-            }
-
-            this.Text += currentVersion;
+            thisVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
+            this.Text += " v" + thisVersion;
 
             InitModifier();
             InitControls();
@@ -337,7 +331,7 @@ namespace RevokeMsgPatcher
                     JavaScriptSerializer serializer = new JavaScriptSerializer();
                     Bag newBag = serializer.Deserialize<Bag>(json);
 
-                    if (Convert.ToDecimal(newBag.LatestVersion) > Convert.ToDecimal(thisVersion))
+                    if (VersionUtil.Compare(newBag.LatestVersion, thisVersion) > 0)
                     {
                         needUpdate = true;
                         lblUpdatePachJson.Text = $"[ 存在最新版本 {newBag.LatestVersion} ]";

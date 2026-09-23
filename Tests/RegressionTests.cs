@@ -69,11 +69,16 @@ class RegressionTests
         try
         {
             Synthetic();
+            Assert(VersionUtil.Compare("2.1.1", "2.1") > 0, "patch release newer than 2.1");
+            Assert(VersionUtil.Compare("2.1.1", "2.1.1") == 0, "same patch release");
+            Assert(VersionUtil.Compare("2.1.10", "2.1.9") > 0, "numeric patch comparison");
+            Assert(VersionUtil.Compare("2.2", "2.1.1") > 0, "next minor release");
             var serializer = new JavaScriptSerializer();
             var external = serializer.Deserialize<Bag>(File.ReadAllText(Path.Combine(args[0], "RevokeMsgPatcher.Assistant", "Data", "2.1", "patch.json")));
             var xml = XDocument.Load(Path.Combine(args[0], "RevokeMsgPatcher", "Properties", "Resources.resx"));
             var embedded = serializer.Deserialize<Bag>(xml.Root.Elements("data").Single(e => (string)e.Attribute("name") == "PatchJson").Element("value").Value);
             var entry = external.Apps["Weixin"].FileCommonModifyInfos["Weixin.dll"][0];
+            Assert(external.LatestVersion == "2.1.1" && embedded.LatestVersion == "2.1.1", "release metadata 2.1.1");
             var embeddedEntry = embedded.Apps["Weixin"].FileCommonModifyInfos["Weixin.dll"][0];
             Assert(entry.Name == embeddedEntry.Name && entry.StartVersion == embeddedEntry.StartVersion && entry.EndVersion == embeddedEntry.EndVersion && entry.ReplacePatterns.Count == embeddedEntry.ReplacePatterns.Count && entry.ReplacePatterns.Zip(embeddedEntry.ReplacePatterns, (a, b) => a.Search.SequenceEqual(b.Search) && a.Replace.SequenceEqual(b.Replace) && a.Category == b.Category && a.ExpectedMatches == b.ExpectedMatches && a.Tips == b.Tips).All(equal => equal), "embedded and external new rules agree");
             Assert(entry.StartVersion == "4.1.15.11" && entry.EndVersion == "4.1.15.12", "version scope bounded to verified build");
