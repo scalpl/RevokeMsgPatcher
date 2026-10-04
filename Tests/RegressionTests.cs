@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
@@ -41,16 +41,19 @@ class RegressionTests
     static void Binary(string path, List<ReplacePattern> rules)
     {
         byte[] original = File.ReadAllBytes(path);
-        Assert(Hash(original) == "3a65d5f38991e32129afa83bc1c92b29babf316199b67c7a47614a9100fb03ca", "verified original Weixin 4.1.15.12 x64");
+        bool newer = Hash(original) == "10f8e995453e2da46d4f2b5080cd6da1f13cc5147746adc119ceae38cb039de5";
+        Assert(newer || Hash(original) == "3a65d5f38991e32129afa83bc1c92b29babf316199b67c7a47614a9100fb03ca", "verified original Weixin x64");
+        int recall = newer ? 0x229e33e : 0x229a79e;
+        int voice = newer ? 0x48cc66d : 0x48cb20d;
         var multi = rules.Where(p => p.Category == "多开").ToList();
         for (int state = 0; state < 8; state++)
         {
             byte[] input = (byte[])original.Clone();
-            if ((state & 1) != 0) input[0x229a79e] = 0x29;
-            if ((state & 2) != 0) { input[0x48cb20d] = 0x90; input[0x48cb20e] = 0xe9; }
+            if ((state & 1) != 0) input[recall] = 0x29;
+            if ((state & 2) != 0) { input[voice] = 0x90; input[voice + 1] = 0xe9; }
             if ((state & 4) != 0) { input[0x90ab6] = 0x90; input[0x90ab7] = 0xe9; }
             byte[] expected = (byte[])input.Clone();
-            expected[0x90ab6] = 0x90; expected[0x90ab7] = 0xe9; expected[0x48cb20d] = 0x0f; expected[0x48cb20e] = 0x85;
+            expected[0x90ab6] = 0x90; expected[0x90ab7] = 0xe9; expected[voice] = 0x0f; expected[voice + 1] = 0x85;
             File.WriteAllBytes(fixture, input);
             if (input.SequenceEqual(expected)) ExpectError("match_already_replace", () => ModifyFinder.FindChanges(fixture, multi));
             else FileUtil.EditMultiHex(fixture, ModifyFinder.FindChanges(fixture, multi));
@@ -60,7 +63,7 @@ class RegressionTests
         }
         File.WriteAllBytes(fixture, original);
         FileUtil.EditMultiHex(fixture, ModifyFinder.FindChanges(fixture, rules));
-        original[0x229a79e] = 0x29; original[0x90ab6] = 0x90; original[0x90ab7] = 0xe9;
+        original[recall] = 0x29; original[0x90ab6] = 0x90; original[0x90ab7] = 0xe9;
         Assert(File.ReadAllBytes(fixture).SequenceEqual(original), "combined anti-recall and multi-instance patch");
     }
     static int Main(string[] args)
@@ -81,10 +84,14 @@ class RegressionTests
             Assert(external.LatestVersion == "2.1.1" && embedded.LatestVersion == "2.1.1", "release metadata 2.1.1");
             var embeddedEntry = embedded.Apps["Weixin"].FileCommonModifyInfos["Weixin.dll"][0];
             Assert(entry.Name == embeddedEntry.Name && entry.StartVersion == embeddedEntry.StartVersion && entry.EndVersion == embeddedEntry.EndVersion && entry.ReplacePatterns.Count == embeddedEntry.ReplacePatterns.Count && entry.ReplacePatterns.Zip(embeddedEntry.ReplacePatterns, (a, b) => a.Search.SequenceEqual(b.Search) && a.Replace.SequenceEqual(b.Replace) && a.Category == b.Category && a.ExpectedMatches == b.ExpectedMatches && a.Tips == b.Tips).All(equal => equal), "embedded and external new rules agree");
-            Assert(entry.StartVersion == "4.1.15.11" && entry.EndVersion == "4.1.15.12", "version scope bounded to verified build");
+            Assert(entry.StartVersion == "4.1.15.12" && entry.EndVersion == "4.1.15.13", "version scope bounded to verified build");
             Assert(entry.ReplacePatterns.All(p => p.ExpectedMatches == 1), "new rules require unique matches");
-            if (args.Length > 1 && !string.IsNullOrEmpty(args[1])) Binary(args[1], entry.ReplacePatterns);
-            else Console.WriteLine("SKIP binary tests: pass -OriginalDll with an unmodified 4.1.15.12 DLL.");
+            if (args.Length > 1 && !string.IsNullOrEmpty(args[1])) {
+                var version = System.Diagnostics.FileVersionInfo.GetVersionInfo(args[1]).FileVersion;
+                var selected = external.Apps["Weixin"].FileCommonModifyInfos["Weixin.dll"].Single(e => e.EndVersion == version);
+                Binary(args[1], selected.ReplacePatterns);
+            }
+            else Console.WriteLine("SKIP binary tests: pass -OriginalDll with an unmodified 4.1.15.12 or 4.1.15.13 DLL.");
             Console.WriteLine("ALL TESTS PASSED: " + assertions); return 0;
         }
         catch (Exception e) { Console.Error.WriteLine(e.GetType().Name + ": " + e.Message); return 1; }
